@@ -9,7 +9,7 @@ export function HeroSection() {
 
       {/* Avatar scene (same container, aligned to the right) */}
       <div className="absolute inset-0 z-0 flex justify-end">
-        <div className="h-full w-[70%]">
+        <div className="h-full w-full">
           <AvatarCanvas animation={HERO_CONFIG.avatar.animation} />
         </div>
       </div>
