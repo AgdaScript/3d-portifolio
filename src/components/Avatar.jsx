@@ -5,13 +5,16 @@ import * as THREE from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 
 export function Avatar({
-  headFollow = false,
-  cursorFollow = false,
+  headFollow = true,
+  cursorFollow = true,
   wireframe = false,
   ...props
 }) {
   const group = useRef();
   const sequenceStartedRef = useRef(false);
+  const cursorTarget = useMemo(() => new THREE.Vector3(), []);
+  const headWorldPosition = useMemo(() => new THREE.Vector3(), []);
+  const amplifiedTarget = useMemo(() => new THREE.Vector3(), []);
   const { scene } = useGLTF('models/avatar-whit-clotes.glb');
   const clone = useMemo(() => SkeletonUtils.clone(scene), [scene]);
 
@@ -40,12 +43,31 @@ export function Avatar({
 
   useFrame((state) => {
     if (!group.current) return;
-    if (headFollow) {
-      group.current.getObjectByName('Head')?.lookAt(state.camera.position);
-    }
-    if (cursorFollow) {
-      const target = new THREE.Vector3(state.mouse.x, state.mouse.y, 1);
-      group.current.getObjectByName('Spine2')?.lookAt(target);
+
+    // Cursor tracking only happens while Typing is active.
+    const typingAction = actions['Typing'];
+    if (!typingAction?.isRunning()) return;
+
+    // Amplify cursor movement so head tracking is more visible.
+    cursorTarget
+      .set(state.mouse.x * 8.1, state.mouse.y * 42.6, 0.28)
+      .unproject(state.camera);
+
+    if (headFollow || cursorFollow) {
+      const head = group.current.getObjectByName('Head');
+
+      if (head) {
+        head.getWorldPosition(headWorldPosition);
+        amplifiedTarget
+          .copy(cursorTarget)
+          .sub(headWorldPosition)
+          .multiplyScalar(9.6)
+          .add(headWorldPosition);
+      } else {
+        amplifiedTarget.copy(cursorTarget);
+      }
+
+      head?.lookAt(amplifiedTarget);
     }
   });
 
