@@ -1,1 +1,0 @@
-self.__REACT_LOADABLE_MANIFEST="{\"components/hero/AvatarCanvas.tsx -> @/components/avatar/AvatarScene\":{\"id\":\"components/hero/AvatarCanvas.tsx -> @/components/avatar/AvatarScene\",\"files\":[\"static/chunks/_app-pages-browser_src_components_avatar_AvatarScene_tsx.js\"]}}"
