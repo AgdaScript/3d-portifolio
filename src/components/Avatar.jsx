@@ -12,6 +12,7 @@ export function Avatar({
 }) {
   const group = useRef();
   const sequenceStartedRef = useRef(false);
+  const leftTurnAppliedRef = useRef(false);
   const cursorTarget = useMemo(() => new THREE.Vector3(), []);
   const headWorldPosition = useMemo(() => new THREE.Vector3(), []);
   const headScreenPosition = useMemo(() => new THREE.Vector3(), []);
@@ -111,6 +112,11 @@ export function Avatar({
       }
 
       if (event.action === leftTurn) {
+        if (!leftTurnAppliedRef.current && group.current) {
+          // Keep avatar turned after Left Turn, instead of snapping back.
+          group.current.rotation.y += Math.PI / 2;
+          leftTurnAppliedRef.current = true;
+        }
         standToSit.reset().setLoop(THREE.LoopOnce, 1).fadeIn(0.35).play();
         standToSit.clampWhenFinished = true;
         leftTurn.fadeOut(0.35);
