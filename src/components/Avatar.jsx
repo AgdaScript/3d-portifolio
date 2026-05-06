@@ -14,7 +14,10 @@ export function Avatar({
   const sequenceStartedRef = useRef(false);
   const cursorTarget = useMemo(() => new THREE.Vector3(), []);
   const headWorldPosition = useMemo(() => new THREE.Vector3(), []);
+  const headScreenPosition = useMemo(() => new THREE.Vector3(), []);
   const amplifiedTarget = useMemo(() => new THREE.Vector3(), []);
+  const forwardDirection = useMemo(() => new THREE.Vector3(), []);
+  const forwardTarget = useMemo(() => new THREE.Vector3(), []);
   const { scene } = useGLTF('models/avatar-whit-clotes.glb');
   const clone = useMemo(() => SkeletonUtils.clone(scene), [scene]);
 
@@ -55,19 +58,33 @@ export function Avatar({
 
     if (headFollow || cursorFollow) {
       const head = group.current.getObjectByName('Head');
+      if (!head) return;
 
-      if (head) {
-        head.getWorldPosition(headWorldPosition);
-        amplifiedTarget
-          .copy(cursorTarget)
-          .sub(headWorldPosition)
-          .multiplyScalar(9.6)
-          .add(headWorldPosition);
-      } else {
-        amplifiedTarget.copy(cursorTarget);
+      head.getWorldPosition(headWorldPosition);
+      headScreenPosition.copy(headWorldPosition).project(state.camera);
+
+      const cursorDistanceToHead = Math.hypot(
+        state.mouse.x - headScreenPosition.x,
+        state.mouse.y - headScreenPosition.y
+      );
+      const activationRadius = 0.68;
+
+      // Outside the head zone: keep looking forward.
+      if (cursorDistanceToHead > activationRadius) {
+        const directionSource = head.parent ?? group.current;
+        directionSource.getWorldDirection(forwardDirection);
+        forwardTarget.copy(headWorldPosition).addScaledVector(forwardDirection, 2);
+        head.lookAt(forwardTarget);
+        return;
       }
 
-      head?.lookAt(amplifiedTarget);
+      amplifiedTarget
+        .copy(cursorTarget)
+        .sub(headWorldPosition)
+        .multiplyScalar(9.6)
+        .add(headWorldPosition);
+
+      head.lookAt(amplifiedTarget);
     }
   });
 
