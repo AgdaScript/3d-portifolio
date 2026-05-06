@@ -18,13 +18,15 @@ export function Avatar({
   const { animations: typingAnimation } = useFBX('animations/Typing.fbx');
   const { animations: standingAnimation } = useFBX('animations/Standing Idle.fbx');
   const { animations: fallingAnimation } = useFBX('animations/Falling To Landing.fbx');
+  const { animations: greetingAnimation } = useFBX('animations/Standing Greeting.fbx');
 
   typingAnimation[0].name = 'Typing';
   standingAnimation[0].name = 'Standing';
   fallingAnimation[0].name = 'Falling';
+  greetingAnimation[0].name = 'Greeting';
 
   const { actions } = useAnimations(
-    [typingAnimation[0], standingAnimation[0], fallingAnimation[0]],
+    [typingAnimation[0], standingAnimation[0], fallingAnimation[0], greetingAnimation[0]],
     group
   );
 
@@ -39,9 +41,37 @@ export function Avatar({
     }
   });
 
+  // On mount: play Greeting once, then transition to the requested animation
+  useEffect(() => {
+    const greeting = actions['Greeting'];
+    const idle = actions[animation];
+    if (!greeting || !idle) return;
+
+    greeting.reset().setLoop(THREE.LoopOnce, 1).play();
+    greeting.clampWhenFinished = true;
+
+    const greetingDuration = greeting.getClip().duration;
+    const transitionAt = Math.max(0, greetingDuration - 0.5) * 1000;
+
+    const timer = setTimeout(() => {
+      idle.reset().fadeIn(0.5).play();
+      greeting.fadeOut(0.5);
+    }, transitionAt);
+
+    return () => clearTimeout(timer);
+    // Only runs on mount — intentionally omitting deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Handle subsequent animation changes (after mount)
   useEffect(() => {
     const action = actions[animation];
     if (!action) return;
+
+    // Skip on first render — the mount effect handles it
+    const greeting = actions['Greeting'];
+    if (greeting?.isRunning()) return;
+
     action.reset().fadeIn(0.5).play();
     return () => {
       action.fadeOut(0.5);
