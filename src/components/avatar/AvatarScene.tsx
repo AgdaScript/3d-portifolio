@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { ContactShadows, Environment, OrbitControls } from '@react-three/drei';
 import { Avatar } from '../Avatar';
+import { GamingRoom } from '../gaming-room';
 
 interface AvatarSceneProps {
   animation?: string;
@@ -34,6 +35,7 @@ function SceneContent({ animation }: AvatarSceneProps) {
 
       <Suspense fallback={null}>
         <group position-y={-1}>
+          <GamingRoom position={[0, 0, 0]} scale={0.13} />
           <Avatar animation={animation ?? 'Standing'} />
           <ContactShadows
             opacity={0.6}

@@ -8,12 +8,12 @@ export function HeroSection() {
       <BackgroundGradient />
 
       {/* Left — Text content */}
-      <div className="flex w-1/2 flex-col">
+      <div className="flex w-[30%] flex-col">
         <HeroContent config={HERO_CONFIG} />
       </div>
 
       {/* Right — 3D Avatar */}
-      <div className="relative w-1/2">
+      <div className="relative w-[70%]">
         <AvatarCanvas animation={HERO_CONFIG.avatar.animation} />
       </div>
     </section>

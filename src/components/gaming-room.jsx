@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { useLoader } from '@react-three/fiber';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export function GamingRoom({
   position = [0, 0, 0],
@@ -7,7 +8,7 @@ export function GamingRoom({
   scale = 1,
   ...props
 }) {
-  const { scene } = useGLTF('models/modern_gaming_setup.glb');
+  const { scene } = useLoader(GLTFLoader, 'models/modern_gaming_setup.glb');
   const roomScene = useMemo(() => scene.clone(true), [scene]);
 
   return (
@@ -23,4 +24,4 @@ export function GamingRoom({
   );
 }
 
-useGLTF.preload('models/modern_gaming_setup.glb');
+useLoader.preload(GLTFLoader, 'models/modern_gaming_setup.glb');
