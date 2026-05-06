@@ -4,17 +4,21 @@ import { HeroContent } from '@/components/hero/HeroContent';
 
 export function HeroSection() {
   return (
-    <section className="relative flex h-screen w-full overflow-hidden bg-background">
+    <section className="relative h-screen w-full overflow-hidden bg-background">
       <BackgroundGradient />
 
-      {/* Left — Text content */}
-      <div className="flex w-[30%] flex-col">
-        <HeroContent config={HERO_CONFIG} />
+      {/* Avatar scene (same container, aligned to the right) */}
+      <div className="absolute inset-0 z-0 flex justify-end">
+        <div className="h-full w-[70%]">
+          <AvatarCanvas animation={HERO_CONFIG.avatar.animation} />
+        </div>
       </div>
 
-      {/* Right — 3D Avatar */}
-      <div className="relative w-[70%]">
-        <AvatarCanvas animation={HERO_CONFIG.avatar.animation} />
+      {/* Text over the scene */}
+      <div className="relative z-10 h-full w-full">
+        <div className="h-full max-w-[30%]">
+          <HeroContent config={HERO_CONFIG} />
+        </div>
       </div>
     </section>
   );

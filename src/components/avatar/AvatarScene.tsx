@@ -34,7 +34,7 @@ function SceneContent({ animation }: AvatarSceneProps) {
       <pointLight position={[0, 3, 3]} intensity={0.6} color="#c9a96e" />
 
       <Suspense fallback={null}>
-        <group position-y={-1}>
+        <group position-y={-1} rotation-y={-0.82}>
           <GamingRoom position={[0, 0, 0]} scale={0.13} />
           <Avatar animation={animation ?? 'Standing'} />
           <ContactShadows
