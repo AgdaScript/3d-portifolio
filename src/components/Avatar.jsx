@@ -9,7 +9,8 @@ export function Avatar({
   cursorFollow = true,
   wireframe = false,
   greetingOffset = [-0.15, 0, 0],
-  standToSitOffset = [0, 0, 0.4],
+  standToSitOffset = [0, 0, 0.5],
+  typingOffset = [0, 0, 0.07],
   typingRotation = [0, 0.25, 0],
   cursorYawIntensity = 0.35,
   cursorPitchIntensity = 0.2,
@@ -161,6 +162,8 @@ export function Avatar({
       ? greetingOffset
       : activeClip === 'StandToSit'
       ? standToSitOffset
+      : activeClip === 'Typing'
+      ? typingOffset
       : [0, 0, 0];
 
   const clipRotation = activeClip === 'Typing' ? typingRotation : [0, 0, 0];
