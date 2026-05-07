@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAnimations, useFBX, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -8,10 +8,12 @@ export function Avatar({
   headFollow = true,
   cursorFollow = true,
   wireframe = false,
+  greetingOffset = [-0.15, 0, 0],
   ...props
 }) {
   const group = useRef();
   const sequenceStartedRef = useRef(false);
+  const [activeClip, setActiveClip] = useState('Greeting');
   const cursorTarget = useMemo(() => new THREE.Vector3(), []);
   const headWorldPosition = useMemo(() => new THREE.Vector3(), []);
   const headScreenPosition = useMemo(() => new THREE.Vector3(), []);
@@ -103,12 +105,14 @@ export function Avatar({
         standToSit.reset().setLoop(THREE.LoopOnce, 1).fadeIn(0.35).play();
         standToSit.clampWhenFinished = true;
         greeting.fadeOut(0.35);
+        setActiveClip('StandToSit');
         return;
       }
 
       if (event.action === standToSit) {
         typing.reset().setLoop(THREE.LoopRepeat, Infinity).fadeIn(0.35).play();
         standToSit.fadeOut(0.35);
+        setActiveClip('Typing');
         mixer.removeEventListener('finished', onFinished);
       }
     };
@@ -128,9 +132,13 @@ export function Avatar({
     });
   }, [wireframe, clone]);
 
+  const clipOffset = activeClip === 'Greeting' ? greetingOffset : [0, 0, 0];
+
   return (
     <group {...props} ref={group} dispose={null}>
-      <primitive object={clone} />
+      <group position={clipOffset}>
+        <primitive object={clone} />
+      </group>
     </group>
   );
 }
