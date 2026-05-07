@@ -9,6 +9,7 @@ export function Avatar({
   cursorFollow = true,
   wireframe = false,
   greetingOffset = [-0.15, 0, 0],
+  standToSitOffset = [0, 0, 0.4],
   ...props
 }) {
   const group = useRef();
@@ -150,7 +151,12 @@ export function Avatar({
     });
   }, [wireframe, clone]);
 
-  const clipOffset = activeClip === 'Greeting' ? greetingOffset : [0, 0, 0];
+  const clipOffset =
+    activeClip === 'Greeting'
+      ? greetingOffset
+      : activeClip === 'StandToSit'
+      ? standToSitOffset
+      : [0, 0, 0];
 
   return (
     <group {...props} ref={group} dispose={null}>
