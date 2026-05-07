@@ -18,7 +18,7 @@ export const AVATAR_ANIMATION_SEQUENCE = [
     id: 'greeting',
     clip: 'Greeting',
     transform: {
-      position: [-0.65, 0, -0.35],
+      position: [-2.5, 0, -2.35], 
       rotation: [0, 0, 0],
     },
     playback: { mode: 'full' },
@@ -33,7 +33,7 @@ export const AVATAR_ANIMATION_SEQUENCE = [
       // rotation: [0, Math.PI / 2, 0],
     },
     playback: { mode: 'full' },
-    transition: { type: 'fade', duration: 0.35 },
+    transition: { type: 'fade', duration: 'full' },
     nextId: 'standToSit',
   },
   {
