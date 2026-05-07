@@ -13,10 +13,7 @@ export function Avatar({
   const group = useRef();
   const sequenceStartedRef = useRef(false);
   const leftTurnAppliedRef = useRef(false);
-  const cursorTarget = useMemo(() => new THREE.Vector3(), []);
   const headWorldPosition = useMemo(() => new THREE.Vector3(), []);
-  const headScreenPosition = useMemo(() => new THREE.Vector3(), []);
-  const amplifiedTarget = useMemo(() => new THREE.Vector3(), []);
   const forwardDirection = useMemo(() => new THREE.Vector3(), []);
   const forwardTarget = useMemo(() => new THREE.Vector3(), []);
   const { scene } = useGLTF('models/avatar-whit-clotes.glb');
@@ -55,40 +52,15 @@ export function Avatar({
     const typingAction = actions['Typing'];
     if (!typingAction?.isRunning()) return;
 
-    // Amplify cursor movement so head tracking is more visible.
-    cursorTarget
-      .set(state.mouse.x * 8.1, state.mouse.y * 42.6, 0.28)
-      .unproject(state.camera);
-
     if (headFollow || cursorFollow) {
       const head = group.current.getObjectByName('Head');
       if (!head) return;
 
       head.getWorldPosition(headWorldPosition);
-      headScreenPosition.copy(headWorldPosition).project(state.camera);
-
-      const cursorDistanceToHead = Math.hypot(
-        state.mouse.x - headScreenPosition.x,
-        state.mouse.y - headScreenPosition.y
-      );
-      const activationRadius = 0.68;
-
-      // Outside the head zone: keep looking forward.
-      if (cursorDistanceToHead > activationRadius) {
-        const directionSource = head.parent ?? group.current;
-        directionSource.getWorldDirection(forwardDirection);
-        forwardTarget.copy(headWorldPosition).addScaledVector(forwardDirection, 2);
-        head.lookAt(forwardTarget);
-        return;
-      }
-
-      amplifiedTarget
-        .copy(cursorTarget)
-        .sub(headWorldPosition)
-        .multiplyScalar(9.6)
-        .add(headWorldPosition);
-
-      head.lookAt(amplifiedTarget);
+      const body = group.current.getObjectByName('Hips') ?? group.current;
+      body.getWorldDirection(forwardDirection);
+      forwardTarget.copy(headWorldPosition).addScaledVector(forwardDirection, 2);
+      head.lookAt(forwardTarget);
     }
   });
 
