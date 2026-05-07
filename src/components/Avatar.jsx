@@ -10,18 +10,16 @@ export function Avatar({
   wireframe = false,
   greetingOffset = [-0.15, 0, 0],
   standToSitOffset = [0, 0, 0.4],
+  typingRotation = [0, 0.25, 0],
+  cursorYawIntensity = 0.35,
+  cursorPitchIntensity = 0.2,
   ...props
 }) {
   const group = useRef();
   const sequenceStartedRef = useRef(false);
   const leftTurnAppliedRef = useRef(false);
+  const pointerOnPageRef = useRef(false);
   const [activeClip, setActiveClip] = useState('Greeting');
-  const cursorTarget = useMemo(() => new THREE.Vector3(), []);
-  const headWorldPosition = useMemo(() => new THREE.Vector3(), []);
-  const headScreenPosition = useMemo(() => new THREE.Vector3(), []);
-  const amplifiedTarget = useMemo(() => new THREE.Vector3(), []);
-  const forwardDirection = useMemo(() => new THREE.Vector3(), []);
-  const forwardTarget = useMemo(() => new THREE.Vector3(), []);
   const { scene } = useGLTF('models/avatar-whit-clotes.glb');
   const clone = useMemo(() => SkeletonUtils.clone(scene), [scene]);
 
@@ -51,48 +49,55 @@ export function Avatar({
     group
   );
 
+  // Track whether the cursor is actually inside the page/window. Without this,
+  // r3f's state.mouse keeps its last value when the cursor leaves the canvas
+  // (or moves to another monitor), which makes the head stick to a stale target.
+  useEffect(() => {
+    const markOut = () => {
+      pointerOnPageRef.current = false;
+    };
+    const markIn = () => {
+      pointerOnPageRef.current = true;
+    };
+    const handlePointerOut = (event) => {
+      // relatedTarget === null means the pointer left the window entirely.
+      if (!event.relatedTarget) markOut();
+    };
+    const handlePointerOver = () => markIn();
+
+    document.addEventListener('mouseleave', markOut);
+    document.addEventListener('mouseenter', markIn);
+    document.addEventListener('mouseout', handlePointerOut);
+    document.addEventListener('mouseover', handlePointerOver);
+    window.addEventListener('blur', markOut);
+    window.addEventListener('focus', markIn);
+
+    return () => {
+      document.removeEventListener('mouseleave', markOut);
+      document.removeEventListener('mouseenter', markIn);
+      document.removeEventListener('mouseout', handlePointerOut);
+      document.removeEventListener('mouseover', handlePointerOver);
+      window.removeEventListener('blur', markOut);
+      window.removeEventListener('focus', markIn);
+    };
+  }, []);
+
   useFrame((state) => {
     if (!group.current) return;
 
-    // Cursor tracking only happens while Typing is active.
     const typingAction = actions['Typing'];
     if (!typingAction?.isRunning()) return;
+    if (!(headFollow || cursorFollow)) return;
+    if (!pointerOnPageRef.current) return;
 
-    // Amplify cursor movement so head tracking is more visible.
-    cursorTarget
-      .set(state.mouse.x * 8.1, state.mouse.y * 42.6, 0.28)
-      .unproject(state.camera);
+    const head = group.current.getObjectByName('Head');
+    if (!head) return;
 
-    if (headFollow || cursorFollow) {
-      const head = group.current.getObjectByName('Head');
-      if (!head) return;
-
-      head.getWorldPosition(headWorldPosition);
-      headScreenPosition.copy(headWorldPosition).project(state.camera);
-
-      const cursorDistanceToHead = Math.hypot(
-        state.mouse.x - headScreenPosition.x,
-        state.mouse.y - headScreenPosition.y
-      );
-      const activationRadius = 0.68;
-
-      // Outside the head zone: keep looking forward.
-      if (cursorDistanceToHead > activationRadius) {
-        const directionSource = head.parent ?? group.current;
-        directionSource.getWorldDirection(forwardDirection);
-        forwardTarget.copy(headWorldPosition).addScaledVector(forwardDirection, 2);
-        head.lookAt(forwardTarget);
-        return;
-      }
-
-      amplifiedTarget
-        .copy(cursorTarget)
-        .sub(headWorldPosition)
-        .multiplyScalar(9.6)
-        .add(headWorldPosition);
-
-      head.lookAt(amplifiedTarget);
-    }
+    // Add a small head turn proportional to the cursor position, applied on top
+    // of the animation pose (which already inherits the body rotation chain).
+    // Centered cursor = no extra rotation, edges = max intensity.
+    head.rotation.y -= state.mouse.x * cursorYawIntensity;
+    head.rotation.x -= state.mouse.y * cursorPitchIntensity;
   });
 
   // Play opening sequence: Greeting -> LeftTurn -> StandToSit -> Typing
@@ -158,9 +163,11 @@ export function Avatar({
       ? standToSitOffset
       : [0, 0, 0];
 
+  const clipRotation = activeClip === 'Typing' ? typingRotation : [0, 0, 0];
+
   return (
     <group {...props} ref={group} dispose={null}>
-      <group position={clipOffset}>
+      <group position={clipOffset} rotation={clipRotation}>
         <primitive object={clone} />
       </group>
     </group>
